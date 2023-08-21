@@ -20,8 +20,8 @@ const ChatId = "-ZZZZZZZ"
 
 func issuer(info string) string {
 	params := strings.Split(info, ",")
-	org := ""
-	cn := ""
+	cn := "??"
+	org := "??"
 	for _, value := range params {
 		args := strings.Split(value, "=")
 		if args[0] == "CN" {
@@ -66,7 +66,7 @@ func getUrl() string {
 	return fmt.Sprintf("https://api.telegram.org/bot%s", Token)
 }
 
-func SendMessage(text string) (bool, error) {
+func sendMessage(text string) (bool, error) {
 	// Global variables
 	var err error
 	var response *http.Response
@@ -111,7 +111,7 @@ func main() {
 		done := false
 		tries := 0
 		for !done {
-			_, err := SendMessage(msg)
+			_, err := sendMessage(msg)
 			if err == nil {
 				done = true
 				fmt.Printf("OK!")
