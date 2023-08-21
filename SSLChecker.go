@@ -4,12 +4,16 @@ import (
 	"crypto/tls"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"strings"
 	"time"
+	"github.com/cloudfoundry/jibber_jabber"
+	"golang.org/x/text/message"
+	"golang.org/x/text/language"
 )
 
 const MinDays = 7
@@ -17,6 +21,37 @@ const SendDelay = 2
 const MaxTries = 5
 const Token = "XXXXX:YYYYYYYYYYYYYYYYY"
 const ChatId = "-ZZZZZZZ"
+
+var p *message.Printer
+var matcher language.Matcher
+
+func initLangs() {
+	message.SetString(language.AmericanEnglish, "ERROR: problem getting certificate for server %s: %s\n", "ERROR: problem getting certificate for server %s: %s\n")
+	message.SetString(language.Russian, "ERROR: problem getting certificate for server %s: %s\n", "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
+	message.SetString(language.AmericanEnglish, "ERROR: name mismatch for server's certificate - %s: %s\n", "ERROR: name mismatch for server's certificate - %s: %s\n")
+	message.SetString(language.Russian, "ERROR: name mismatch for server's certificate - %s: %s\n", "ОШИБКА: неверное имя в сертификате сервера - %s: %s\n")
+	message.SetString(language.AmericanEnglish, "ERROR: response status code is not OK (200): %d", "ERROR: response status code is not OK (200): %d")
+	message.SetString(language.Russian, "ERROR: response status code is not OK (200): %d", "ОШИБКА: код статуса в ответе сервера ошибочный (не 200): %d")
+	message.SetString(language.AmericanEnglish, "ERROR: message sending failed (%s)! Pausing for %d s...\n", "ERROR: message sending failed (%s)! Pausing for %d s...\n")
+	message.SetString(language.Russian, "ERROR: message sending failed (%s)! Pausing for %d s...\n", "ОШИБКА: невозможно послать сообщение (%s)! Делаем паузу (%d с)...\n")
+	message.SetString(language.AmericanEnglish, "Failed to send message after %d retries!\n", "Failed to send message after %d retries!\n")
+	message.SetString(language.Russian, "Failed to send message after %d retries!\n", "Не удалось отправить сообщение с %d попыток!\n")
+	message.SetString(language.AmericanEnglish, "ERRORS FOUND:\n%s\n", "ERRORS FOUND:\n%s\n")
+	message.SetString(language.Russian, "ERRORS FOUND:\n%s\n", "НАЙДЕННЫЕ ОШИБКИ:\n%s\n")
+
+	message.SetString(language.AmericanEnglish, "Sending...\n",  "Sending...\n")
+	message.SetString(language.Russian, "Sending...\n", "Отправка...\n")
+	message.SetString(language.AmericanEnglish, "OK!\n", "OK!\n")
+	message.SetString(language.Russian, "OK!\n", "ОК!\n")
+	message.SetString(language.AmericanEnglish, "Server: %s\n", "Server: %s\n")
+	message.SetString(language.Russian, "Issuer: %s\n",  "Сервер: %s\n")
+	message.SetString(language.AmericanEnglish, "Issuer: %s\n", "Issuer: %s\n")
+	message.SetString(language.Russian, "Issuer: %s\n",  "Выдан: %s\n")
+	message.SetString(language.AmericanEnglish, "Expires: %v\n", "Expires: %v\n")
+	message.SetString(language.Russian, "Expires: %v\n",  "Истекает: %v\n")
+	message.SetString(language.AmericanEnglish, "%d days left\n", "%d days left\n")
+	message.SetString(language.Russian, "%d days left\n", "Осталось: %d дней\n")
+}
 
 func issuer(info string) string {
 	params := strings.Split(info, ",")
@@ -34,26 +69,50 @@ func issuer(info string) string {
 	return fmt.Sprintf("%s (%s)", org, cn)
 }
 
+func verifyHostname(conn *tls.Conn, url string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+		        switch x := r.(type) {
+		        	case string:
+		        		err = errors.New(x)
+		        	case error:
+		        		err = x
+		        	default:
+		        		err = errors.New("Unknown panic")
+		        }
+		}
+	}()
+	err = conn.VerifyHostname(url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func chk(url string) string {
 	msg := ""
         errMsg := ""
 	conn, err := tls.Dial("tcp", url + ":443", nil)
 	if err != nil {
-		errMsg = errMsg + fmt.Sprintf("ERROR: problem getting certificate for server %s: %s\n", url, err.Error())
+		errMsg = errMsg + p.Sprintf("ERROR: problem getting certificate for server %s: %s\n", url, err.Error())
+		return errMsg
 	}
 
-	err = conn.VerifyHostname(url)
+	err = verifyHostname(conn, url)
 	if err != nil {
-		errMsg = errMsg + fmt.Sprintf("ERROR: name mismatch for server's certificate - %s: %s\n", url, err.Error())
+		errMsg = errMsg + p.Sprintf("ERROR: name mismatch for server's certificate - %s: %s\n", url, err.Error())
+		return errMsg
 	}
+
 	expiry := conn.ConnectionState().PeerCertificates[0].NotAfter
 	currentTime := time.Now()
         diff := expiry.Sub(currentTime)
         daysLeft := int(math.Round(diff.Hours() / 24))
-        msg = msg + fmt.Sprintf("Server: %s\n", url)
-	msg = msg + fmt.Sprintf("Issuer: %s\n", issuer(fmt.Sprintf("%s", conn.ConnectionState().PeerCertificates[0].Issuer)))
-	msg = msg + fmt.Sprintf("Expires: %v\n", expiry.Format(time.RFC1123))
-	msg = msg + fmt.Sprintf("%d days left\n=================\n", daysLeft)
+        msg = msg + p.Sprintf("Server: %s\n", url)
+	msg = msg + p.Sprintf("Issuer: %s\n", issuer(fmt.Sprintf("%s", conn.ConnectionState().PeerCertificates[0].Issuer)))
+	msg = msg + p.Sprintf("Expires: %v\n", expiry.Format(time.RFC1123))
+	msg = msg + p.Sprintf("%d days left\n", daysLeft)
+	msg = msg + "=================\n"
 	fmt.Printf(msg)
 	if daysLeft <= MinDays {
 		errMsg = msg
@@ -67,11 +126,9 @@ func getUrl() string {
 }
 
 func sendMessage(text string) (bool, error) {
-	// Global variables
 	var err error
 	var response *http.Response
 
-	// Send the message
 	url := fmt.Sprintf("%s/sendMessage", getUrl())
 	body, _ := json.Marshal(map[string]string{
 		"chat_id": ChatId,
@@ -86,20 +143,29 @@ func sendMessage(text string) (bool, error) {
 		return false, err
 	}
 
-	// Close the request at the end
 	defer response.Body.Close()
 
-	// Body
 	body, err = ioutil.ReadAll(response.Body)
+
 	if err != nil {
 		return false, err
 	}
 
-	// Return
+	if response.StatusCode != 200 {
+		err = errors.New(p.Sprintf("ERROR: response status code is not OK (200): %d", response.StatusCode))
+		return false, err
+	}
+
 	return true, nil
 }
 
 func main() {
+	initLangs()
+	userLanguage, err := jibber_jabber.DetectLanguage()
+        matcher = language.NewMatcher(message.DefaultCatalog.Languages())
+	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
+	p = message.NewPrinter(tag)
+
 	urls := []string{"server1", "server2", "server3"}
 
 	msg := ""
@@ -108,20 +174,22 @@ func main() {
 	}
 
 	if msg != "" {
+		p.Printf("ERRORS FOUND:\n%s\n", msg)
+		p.Printf("Sending...\n")
 		done := false
 		tries := 0
 		for !done {
-			_, err := sendMessage(msg)
+			_, err = sendMessage(msg)
 			if err == nil {
 				done = true
-				fmt.Printf("OK!")
+				p.Println("OK!")
 			} else {
-				fmt.Printf("ERROR: message sending failed! Pausing for %d s...\n", SendDelay)
+				p.Printf("ERROR: message sending failed (%s)! Pausing for %d s...\n", err, SendDelay)
                         	duration := time.Second * SendDelay
 				time.Sleep(duration)
 				tries++
 				if tries >= MaxTries {
-					panic(fmt.Sprintf("Failed to send message after %d retries!\n", tries))
+					panic(p.Sprintf("Failed to send message after %d retries!\n", tries))
 				}
 			}
 		}
