@@ -5,10 +5,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 	"github.com/cloudfoundry/jibber_jabber"
@@ -16,11 +18,11 @@ import (
 	"golang.org/x/text/language"
 )
 
-const MinDays = 7
-const SendDelay = 2
-const MaxTries = 5
-const Token = "XXXXX:YYYYYYYYYYYYYYYYY"
-const ChatId = "-ZZZZZZZ"
+var MinDays *int
+var SendDelay *int
+var MaxTries *int
+var TgmToken = ""
+var TgmChatId = ""
 
 var p *message.Printer
 var matcher language.Matcher
@@ -44,7 +46,7 @@ func initLangs() {
 	message.SetString(language.AmericanEnglish, "OK!\n", "OK!\n")
 	message.SetString(language.Russian, "OK!\n", "ОК!\n")
 	message.SetString(language.AmericanEnglish, "Server: %s\n", "Server: %s\n")
-	message.SetString(language.Russian, "Issuer: %s\n",  "Сервер: %s\n")
+	message.SetString(language.Russian, "Server: %s\n",  "Сервер: %s\n")
 	message.SetString(language.AmericanEnglish, "Issuer: %s\n", "Issuer: %s\n")
 	message.SetString(language.Russian, "Issuer: %s\n",  "Выдан: %s\n")
 	message.SetString(language.AmericanEnglish, "Expires: %v\n", "Expires: %v\n")
@@ -114,7 +116,7 @@ func chk(url string) string {
 	msg = msg + p.Sprintf("%d days left\n", daysLeft)
 	msg = msg + "=================\n"
 	fmt.Printf(msg)
-	if daysLeft <= MinDays {
+	if daysLeft <= *MinDays {
 		errMsg = msg
 	}
 	return errMsg
@@ -122,7 +124,7 @@ func chk(url string) string {
 
 
 func getUrl() string {
-	return fmt.Sprintf("https://api.telegram.org/bot%s", Token)
+	return fmt.Sprintf("https://api.telegram.org/bot%s", TgmToken)
 }
 
 func sendMessage(text string) (bool, error) {
@@ -131,7 +133,7 @@ func sendMessage(text string) (bool, error) {
 
 	url := fmt.Sprintf("%s/sendMessage", getUrl())
 	body, _ := json.Marshal(map[string]string{
-		"chat_id": ChatId,
+		"chat_id": TgmChatId,
 		"text":    text,
 	})
 	response, err = http.Post(
@@ -166,13 +168,42 @@ func main() {
 	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
 	p = message.NewPrinter(tag)
 
-	urls := []string{"server1", "server2", "server3"}
+	var urls []string
+
+	MinDays = flag.Int("min-days", 5, "minimal remaining active days for a certificate")
+	SendDelay = flag.Int("send-delay", 2, "delay between message sending attempts (in seconds)")
+	MaxTries = flag.Int("max-tries", 5, "maximum number of message sending attempts")
+        flag.StringVar(&TgmToken, "tgm-token", "", "REQUIRED: Telegram token")
+        flag.StringVar(&TgmChatId, "tgm-chatid", "", "REQUIRED: Telegram chat id")
+        flag.Parse()
+
+        urls = flag.Args()
+
+        argsErr := ""
+
+        if TgmToken == "" {
+        	argsErr = argsErr + "ERROR: Telegram token is required\n"
+        }
+
+        if TgmChatId == "" {
+        	argsErr = argsErr + "ERROR: Telegram chat id is required\n"
+        }
+
+        if len(urls) == 0 {
+        	argsErr = argsErr + "ERROR: no server name(s) given\n"
+        }
+
+        if argsErr != "" {
+        	p.Printf(argsErr)
+        	os.Exit(-1)
+        }
 
 	msg := ""
 	for _, value := range urls {
 		msg = msg + chk(value)
 	}
 
+	duration := time.Duration(*SendDelay) * time.Second
 	if msg != "" {
 		p.Printf("ERRORS FOUND:\n%s\n", msg)
 		p.Printf("Sending...\n")
@@ -185,10 +216,9 @@ func main() {
 				p.Println("OK!")
 			} else {
 				p.Printf("ERROR: message sending failed (%s)! Pausing for %d s...\n", err, SendDelay)
-                        	duration := time.Second * SendDelay
 				time.Sleep(duration)
 				tries++
-				if tries >= MaxTries {
+				if tries >= *MaxTries {
 					panic(p.Sprintf("Failed to send message after %d retries!\n", tries))
 				}
 			}
