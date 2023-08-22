@@ -5,24 +5,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
-	"os"
 	"strings"
 	"time"
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/cloudfoundry/jibber_jabber"
 	"golang.org/x/text/message"
 	"golang.org/x/text/language"
 )
 
 var MinDays *int
-var SendDelay *int
+var SendDelay *time.Duration
 var MaxTries *int
-var TgmToken = ""
-var TgmChatId = ""
+var TgmToken *string
+var TgmChatId *string
 
 var p *message.Printer
 var matcher language.Matcher
@@ -124,7 +123,7 @@ func chk(url string) string {
 
 
 func getUrl() string {
-	return fmt.Sprintf("https://api.telegram.org/bot%s", TgmToken)
+	return fmt.Sprintf("https://api.telegram.org/bot%s", *TgmToken)
 }
 
 func sendMessage(text string) (bool, error) {
@@ -133,7 +132,7 @@ func sendMessage(text string) (bool, error) {
 
 	url := fmt.Sprintf("%s/sendMessage", getUrl())
 	body, _ := json.Marshal(map[string]string{
-		"chat_id": TgmChatId,
+		"chat_id": *TgmChatId,
 		"text":    text,
 	})
 	response, err = http.Post(
@@ -168,16 +167,30 @@ func main() {
 	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
 	p = message.NewPrinter(tag)
 
-	var urls []string
+	var urls *[]string
 
+/*
 	MinDays = flag.Int("min-days", 5, "minimal remaining active days for a certificate")
 	SendDelay = flag.Int("send-delay", 2, "delay between message sending attempts (in seconds)")
 	MaxTries = flag.Int("max-tries", 5, "maximum number of message sending attempts")
         flag.StringVar(&TgmToken, "tgm-token", "", "REQUIRED: Telegram token")
         flag.StringVar(&TgmChatId, "tgm-chatid", "", "REQUIRED: Telegram chat id")
         flag.Parse()
+*/
 
-        urls = flag.Args()
+//        urls = getopt.Args()
+
+        kingpin.Version("0.0.1")
+        MinDays = kingpin.Flag("min-days", "minimal remaining active days for a certificate").Default("5").Short('m').Int()
+        SendDelay = kingpin.Flag("send-delay", "delay between message sending attempts (in seconds)").Default("3s").Short('d').Duration()
+        MaxTries = kingpin.Flag("max-tries", "maximum number of message sending attempts").Default("5").Short('x').Int()
+        TgmToken = kingpin.Flag("tgm-token", "Telegram token for sending messsages").Short('t').Required().String()
+        TgmChatId = kingpin.Flag("tgm-chatid", "Telegram chat id for sending messsages").Short('c').Required().String()
+        urls = kingpin.Arg("servers", "server names to check").Required().Strings()
+        kingpin.Parse()
+
+/*
+        fmt.Printf("%#v\n", *urls)
 
         argsErr := ""
 
@@ -189,7 +202,7 @@ func main() {
         	argsErr = argsErr + "ERROR: Telegram chat id is required\n"
         }
 
-        if len(urls) == 0 {
+        if len(*urls) == 0 {
         	argsErr = argsErr + "ERROR: no server name(s) given\n"
         }
 
@@ -197,13 +210,14 @@ func main() {
         	p.Printf(argsErr)
         	os.Exit(-1)
         }
+*/
 
 	msg := ""
-	for _, value := range urls {
+	for _, value := range *urls {
 		msg = msg + chk(value)
 	}
 
-	duration := time.Duration(*SendDelay) * time.Second
+	duration := (*SendDelay) * time.Second
 	if msg != "" {
 		p.Printf("ERRORS FOUND:\n%s\n", msg)
 		p.Printf("Sending...\n")
