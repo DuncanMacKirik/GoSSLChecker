@@ -169,17 +169,6 @@ func main() {
 
 	var urls *[]string
 
-/*
-	MinDays = flag.Int("min-days", 5, "minimal remaining active days for a certificate")
-	SendDelay = flag.Int("send-delay", 2, "delay between message sending attempts (in seconds)")
-	MaxTries = flag.Int("max-tries", 5, "maximum number of message sending attempts")
-        flag.StringVar(&TgmToken, "tgm-token", "", "REQUIRED: Telegram token")
-        flag.StringVar(&TgmChatId, "tgm-chatid", "", "REQUIRED: Telegram chat id")
-        flag.Parse()
-*/
-
-//        urls = getopt.Args()
-
         kingpin.Version("0.0.1")
         MinDays = kingpin.Flag("min-days", "minimal remaining active days for a certificate").Default("5").Short('m').Int()
         SendDelay = kingpin.Flag("send-delay", "delay between message sending attempts (in seconds)").Default("3s").Short('d').Duration()
@@ -188,29 +177,6 @@ func main() {
         TgmChatId = kingpin.Flag("tgm-chatid", "Telegram chat id for sending messsages").Short('c').Required().String()
         urls = kingpin.Arg("servers", "server names to check").Required().Strings()
         kingpin.Parse()
-
-/*
-        fmt.Printf("%#v\n", *urls)
-
-        argsErr := ""
-
-        if TgmToken == "" {
-        	argsErr = argsErr + "ERROR: Telegram token is required\n"
-        }
-
-        if TgmChatId == "" {
-        	argsErr = argsErr + "ERROR: Telegram chat id is required\n"
-        }
-
-        if len(*urls) == 0 {
-        	argsErr = argsErr + "ERROR: no server name(s) given\n"
-        }
-
-        if argsErr != "" {
-        	p.Printf(argsErr)
-        	os.Exit(-1)
-        }
-*/
 
 	msg := ""
 	for _, value := range *urls {
