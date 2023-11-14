@@ -26,6 +26,8 @@ var TgmChatId *string
 var p *message.Printer
 var matcher language.Matcher
 
+const LNG_LANG_EN           = "force usage of English language, instead of cheking the OS defaults"
+const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
 const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
 const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
 const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
@@ -46,6 +48,10 @@ const LNG_EXPIRES_V         = "Expires: %v\n"
 const LNG_DAYSLEFT_D        = "%d days left\n"
 
 func initLangs() {
+	message.SetString(language.AmericanEnglish, LNG_LANG_EN, LNG_LANG_EN)
+	message.SetString(language.Russian, LNG_LANG_EN, "использовать английский язык (вместо попытки автоопределения языка ОС)")
+	message.SetString(language.AmericanEnglish, LNG_LANG_RU, LNG_LANG_RU)
+	message.SetString(language.Russian, LNG_LANG_RU, "использовать русский язык (вместо попытки автоопределения языка ОС)")
         message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
 	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
 	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
@@ -201,7 +207,9 @@ func main() {
 
 	var urls *[]string
 
-        kingpin.Version("0.0.1")
+        kingpin.Version("0.1.0")
+        _ = kingpin.Flag("lang-en", p.Sprintf(LNG_LANG_EN)).Short('e').Bool()
+        _ = kingpin.Flag("lang-ru", p.Sprintf(LNG_LANG_RU)).Short('r').Bool()
         MinDays = kingpin.Flag("min-days", p.Sprintf(LNG_CERT_MIN_DAYS)).Default("5").Short('m').Int()
         SendDelay = kingpin.Flag("send-delay", p.Sprintf(LNG_DELAY_BTW_SND_ATT)).Default("3s").Short('d').Duration()
         MaxTries = kingpin.Flag("max-tries", p.Sprintf(LNG_MAX_NUM_SND_ATT)).Default("5").Short('x').Int()
