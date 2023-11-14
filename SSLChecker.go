@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 	"github.com/alecthomas/kingpin/v2"
@@ -201,6 +202,17 @@ func sendMessage(text string) (bool, error) {
 func main() {
 	initLangs()
 	userLanguage, err := jibber_jabber.DetectLanguage()
+
+	for _, value := range os.Args {
+	        value = strings.ToLower(strings.TrimSpace(value))
+	        if (value == "--lang-en") || (value == "-e") {
+	        	userLanguage = "en"
+	        }
+	        if (value == "--lang-ru") || (value == "-r") {
+	        	userLanguage = "ru"
+	        }
+	}
+
         matcher = language.NewMatcher(message.DefaultCatalog.Languages())
 	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
 	p = message.NewPrinter(tag)
@@ -217,6 +229,7 @@ func main() {
         TgmChatId = kingpin.Flag("tgm-chatid", p.Sprintf(LNG_TGM_CHATID)).Short('c').Required().String()
         urls = kingpin.Arg("servers", p.Sprintf(LNG_SRV_NAMES)).Required().Strings()
         kingpin.Parse()
+        fmt.Printf("%s", (*urls)[0]) 
 
 	msg := ""
 	for _, value := range *urls {
