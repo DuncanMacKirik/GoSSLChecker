@@ -37,6 +37,7 @@ const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
 const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
 const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
 const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
+const LNG_ERR_MISSING_PAR   = "ERROR: missing required parameter(s)!\n"
 const LNG_ERR_GETCERT_SRV_S = "ERROR: problem getting certificate for server %s: %s\n"
 const LNG_ERR_NAME_MISM_S   = "ERROR: name mismatch for server's certificate - %s: %s\n"
 const LNG_ERR_STATUS_N200_D = "ERROR: response status code is not OK (200): %d"
@@ -68,6 +69,8 @@ func initLangs() {
 	message.SetString(language.AmericanEnglish, LNG_SRV_NAMES, LNG_SRV_NAMES)
 	message.SetString(language.Russian, LNG_SRV_NAMES, "имя (имена) серверов для проверки (через пробел)")
 
+        message.SetString(language.AmericanEnglish, LNG_ERR_MISSING_PAR, LNG_ERR_MISSING_PAR) 
+        message.SetString(language.Russian, LNG_ERR_MISSING_PAR, "ОШИБКА: не задан(ы) один или более обязательных параметров!\n")
 	message.SetString(language.AmericanEnglish, LNG_ERR_GETCERT_SRV_S, LNG_ERR_GETCERT_SRV_S)
 	message.SetString(language.Russian, LNG_ERR_GETCERT_SRV_S, "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
 	message.SetString(language.AmericanEnglish, LNG_ERR_NAME_MISM_S, LNG_ERR_NAME_MISM_S)
@@ -231,6 +234,12 @@ func main() {
         TgmToken = flag.StringP("tgm-token", "t", "", p.Sprintf(LNG_TGM_TOKEN))
         TgmChatId = flag.StringP("tgm-chatid", "c", "", p.Sprintf(LNG_TGM_CHATID))
         flag.Parse()
+
+        if (len(flag.Args()) == 0) || (*TgmToken == "") || (*TgmChatId == "") {
+        	flag.Usage()
+        	fmt.Println()
+        	fail(p.Sprintf(LNG_ERR_MISSING_PAR))
+        }
 
 	msg := ""
 	for _, value := range flag.Args() {
