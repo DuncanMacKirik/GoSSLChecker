@@ -254,11 +254,7 @@ func main() {
 				done = true
 				p.Printf(LNG_OK)
 			} else {
-<<<<<<< HEAD
-				p.Printf(LNG_ERR_SEND_FAIL_S_D, err, SendDelay)
-=======
 				p.Fprintf(os.Stderr, LNG_ERR_SEND_FAIL_S_D, err, *SendDelay)
->>>>>>> 7c91d7e (Changed outputting error message from stdout to stderr)
 				time.Sleep(duration)
 				tries++
 				if tries >= *MaxTries {
