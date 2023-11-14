@@ -129,6 +129,11 @@ func verifyHostname(conn *tls.Conn, url string) (err error) {
 	return nil
 }
 
+func fail(msg string) {
+            fmt.Fprintf(os.Stderr, msg)
+            os.Exit(2)
+}
+
 func chk(url string) string {
 	msg := ""
         errMsg := ""
@@ -159,7 +164,6 @@ func chk(url string) string {
 	}
 	return errMsg
 }
-
 
 func getUrl() string {
 	return fmt.Sprintf("https://api.telegram.org/bot%s", *TgmToken)
@@ -252,7 +256,7 @@ func main() {
 				time.Sleep(duration)
 				tries++
 				if tries >= *MaxTries {
-					panic(p.Sprintf(LNG_ERR_SEND_FAIL_R_D, tries))
+					fail(p.Sprintf(LNG_ERR_SEND_FAIL_R_D, tries))
 				}
 			}
 		}
