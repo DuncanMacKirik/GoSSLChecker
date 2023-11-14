@@ -27,6 +27,8 @@ var TgmChatId *string
 var p *message.Printer
 var matcher language.Matcher
 
+const APP_VERSION           = "0.3.0"
+
 const LNG_LANG_EN           = "force usage of English language, instead of cheking the OS defaults"
 const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
 const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
@@ -252,7 +254,11 @@ func main() {
 				done = true
 				p.Printf(LNG_OK)
 			} else {
+<<<<<<< HEAD
 				p.Printf(LNG_ERR_SEND_FAIL_S_D, err, SendDelay)
+=======
+				p.Fprintf(os.Stderr, LNG_ERR_SEND_FAIL_S_D, err, *SendDelay)
+>>>>>>> 7c91d7e (Changed outputting error message from stdout to stderr)
 				time.Sleep(duration)
 				tries++
 				if tries >= *MaxTries {
