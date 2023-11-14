@@ -219,8 +219,8 @@ func main() {
 
         _ = flag.BoolP("lang-en", "e", false, p.Sprintf(LNG_LANG_EN))
         _ = flag.BoolP("lang-ru", "r", false, p.Sprintf(LNG_LANG_RU))
-        MinDays = flag.IntP("min-days", "d", 5, p.Sprintf(LNG_CERT_MIN_DAYS))
-        SendDelay = flag.IntP("send-delay", "s", 3, p.Sprintf(LNG_DELAY_BTW_SND_ATT))
+        MinDays = flag.IntP("min-days", "m", 5, p.Sprintf(LNG_CERT_MIN_DAYS))
+        SendDelay = flag.IntP("send-delay", "d", 3, p.Sprintf(LNG_DELAY_BTW_SND_ATT))
         MaxTries = flag.IntP("max-tries", "x", 5, p.Sprintf(LNG_MAX_NUM_SND_ATT))
         TgmToken = flag.StringP("tgm-token", "t", "", p.Sprintf(LNG_TGM_TOKEN))
         TgmChatId = flag.StringP("tgm-chatid", "c", "", p.Sprintf(LNG_TGM_CHATID))
