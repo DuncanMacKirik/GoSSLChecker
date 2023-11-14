@@ -26,32 +26,64 @@ var TgmChatId *string
 var p *message.Printer
 var matcher language.Matcher
 
-func initLangs() {
-	message.SetString(language.AmericanEnglish, "ERROR: problem getting certificate for server %s: %s\n", "ERROR: problem getting certificate for server %s: %s\n")
-	message.SetString(language.Russian, "ERROR: problem getting certificate for server %s: %s\n", "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
-	message.SetString(language.AmericanEnglish, "ERROR: name mismatch for server's certificate - %s: %s\n", "ERROR: name mismatch for server's certificate - %s: %s\n")
-	message.SetString(language.Russian, "ERROR: name mismatch for server's certificate - %s: %s\n", "ОШИБКА: неверное имя в сертификате сервера - %s: %s\n")
-	message.SetString(language.AmericanEnglish, "ERROR: response status code is not OK (200): %d", "ERROR: response status code is not OK (200): %d")
-	message.SetString(language.Russian, "ERROR: response status code is not OK (200): %d", "ОШИБКА: код статуса в ответе сервера ошибочный (не 200): %d")
-	message.SetString(language.AmericanEnglish, "ERROR: message sending failed (%s)! Pausing for %d s...\n", "ERROR: message sending failed (%s)! Pausing for %d s...\n")
-	message.SetString(language.Russian, "ERROR: message sending failed (%s)! Pausing for %d s...\n", "ОШИБКА: невозможно послать сообщение (%s)! Делаем паузу (%d с)...\n")
-	message.SetString(language.AmericanEnglish, "Failed to send message after %d retries!\n", "Failed to send message after %d retries!\n")
-	message.SetString(language.Russian, "Failed to send message after %d retries!\n", "Не удалось отправить сообщение с %d попыток!\n")
-	message.SetString(language.AmericanEnglish, "ERRORS FOUND:\n%s\n", "ERRORS FOUND:\n%s\n")
-	message.SetString(language.Russian, "ERRORS FOUND:\n%s\n", "НАЙДЕННЫЕ ОШИБКИ:\n%s\n")
+const LNG_ERR_GETCERT_SRV_S = "ERROR: problem getting certificate for server %s: %s\n"
+const LNG_ERR_NAME_MISM_S   = "ERROR: name mismatch for server's certificate - %s: %s\n"
+const LNG_ERR_STATUS_N200_D = "ERROR: response status code is not OK (200): %d"
+const LNG_ERR_SEND_FAIL_S_D = "ERROR: message sending failed (%s)! Pausing for %d s...\n"
+const LNG_ERR_SEND_FAIL_R_D = "Failed to send message after %d retries!\n"
+const LNG_ERRORS_FOUND_S    = "ERRORS FOUND:\n%s\n"
+const LNG_SENDING           = "Sending...\n"
+const LNG_OK                = "OK!\n"
+const LNG_SERVER_S          = "Server: %s\n"
+const LNG_ISSUER_S          = "Issuer: %s\n"
+const LNG_EXPIRES_V         = "Expires: %v\n"
+const LNG_DAYSLEFT_D        = "%d days left\n"
+const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
+const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
+const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
+const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
+const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
+const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
 
-	message.SetString(language.AmericanEnglish, "Sending...\n",  "Sending...\n")
-	message.SetString(language.Russian, "Sending...\n", "Отправка...\n")
-	message.SetString(language.AmericanEnglish, "OK!\n", "OK!\n")
-	message.SetString(language.Russian, "OK!\n", "ОК!\n")
-	message.SetString(language.AmericanEnglish, "Server: %s\n", "Server: %s\n")
-	message.SetString(language.Russian, "Server: %s\n",  "Сервер: %s\n")
-	message.SetString(language.AmericanEnglish, "Issuer: %s\n", "Issuer: %s\n")
-	message.SetString(language.Russian, "Issuer: %s\n",  "Выдан: %s\n")
-	message.SetString(language.AmericanEnglish, "Expires: %v\n", "Expires: %v\n")
-	message.SetString(language.Russian, "Expires: %v\n",  "Истекает: %v\n")
-	message.SetString(language.AmericanEnglish, "%d days left\n", "%d days left\n")
-	message.SetString(language.Russian, "%d days left\n", "Осталось: %d дней\n")
+func initLangs() {
+	message.SetString(language.AmericanEnglish, LNG_ERR_GETCERT_SRV_S, LNG_ERR_GETCERT_SRV_S)
+	message.SetString(language.Russian, LNG_ERR_GETCERT_SRV_S, "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
+	message.SetString(language.AmericanEnglish, LNG_ERR_NAME_MISM_S, LNG_ERR_NAME_MISM_S)
+	message.SetString(language.Russian, LNG_ERR_NAME_MISM_S, "ОШИБКА: неверное имя в сертификате сервера - %s: %s\n")
+	message.SetString(language.AmericanEnglish, LNG_ERR_STATUS_N200_D, LNG_ERR_STATUS_N200_D)
+	message.SetString(language.Russian, LNG_ERR_STATUS_N200_D, "ОШИБКА: код статуса в ответе сервера ошибочный (не 200): %d")
+	message.SetString(language.AmericanEnglish, LNG_ERR_SEND_FAIL_S_D, LNG_ERR_SEND_FAIL_S_D)
+	message.SetString(language.Russian, LNG_ERR_SEND_FAIL_S_D, "ОШИБКА: невозможно послать сообщение (%s)! Делаем паузу (%d с)...\n")
+	message.SetString(language.AmericanEnglish, LNG_ERR_SEND_FAIL_R_D, LNG_ERR_SEND_FAIL_R_D)
+	message.SetString(language.Russian, LNG_ERR_SEND_FAIL_R_D, "Не удалось отправить сообщение с %d попыток!\n")
+	message.SetString(language.AmericanEnglish, LNG_ERRORS_FOUND_S, LNG_ERRORS_FOUND_S)
+	message.SetString(language.Russian, LNG_ERRORS_FOUND_S, "НАЙДЕННЫЕ ОШИБКИ:\n%s\n")
+
+	message.SetString(language.AmericanEnglish, LNG_SENDING,  LNG_SENDING)
+	message.SetString(language.Russian, LNG_SENDING, "Отправка...\n")
+	message.SetString(language.AmericanEnglish, LNG_OK, LNG_OK)
+	message.SetString(language.Russian, LNG_OK, "ОК!\n")
+	message.SetString(language.AmericanEnglish, LNG_SERVER_S, LNG_SERVER_S)
+	message.SetString(language.Russian, LNG_SERVER_S,  "Сервер: %s\n")
+	message.SetString(language.AmericanEnglish, LNG_ISSUER_S, LNG_ISSUER_S)
+	message.SetString(language.Russian, LNG_ISSUER_S,  "Выдан: %s\n")
+	message.SetString(language.AmericanEnglish, LNG_EXPIRES_V, LNG_EXPIRES_V)
+	message.SetString(language.Russian, LNG_EXPIRES_V,  "Истекает: %v\n")
+	message.SetString(language.AmericanEnglish, LNG_DAYSLEFT_D, LNG_DAYSLEFT_D)
+	message.SetString(language.Russian, LNG_DAYSLEFT_D, "Осталось: %d дней\n")
+
+        message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
+	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
+	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
+	message.SetString(language.Russian, LNG_DELAY_BTW_SND_ATT, "длительность задержки между попытками отправки сообщений в Telegram (в секундах)")
+	message.SetString(language.AmericanEnglish, LNG_MAX_NUM_SND_ATT, LNG_MAX_NUM_SND_ATT)
+	message.SetString(language.Russian, LNG_MAX_NUM_SND_ATT, "максимальное количество попыток отправки сообщений в Telegram")
+	message.SetString(language.AmericanEnglish, LNG_TGM_TOKEN, LNG_TGM_TOKEN)
+	message.SetString(language.Russian, LNG_TGM_TOKEN, "значение токена Telegram для отправки сообщений")
+	message.SetString(language.AmericanEnglish, LNG_TGM_CHATID, LNG_TGM_CHATID)
+	message.SetString(language.Russian, LNG_TGM_CHATID, "значение chat id Telegram для отправки сообщений")
+	message.SetString(language.AmericanEnglish, LNG_SRV_NAMES, LNG_SRV_NAMES)
+	message.SetString(language.Russian, LNG_SRV_NAMES, "имя (имена) серверов для проверки (через пробел)")
 }
 
 func issuer(info string) string {
@@ -95,13 +127,13 @@ func chk(url string) string {
         errMsg := ""
 	conn, err := tls.Dial("tcp", url + ":443", nil)
 	if err != nil {
-		errMsg = errMsg + p.Sprintf("ERROR: problem getting certificate for server %s: %s\n", url, err.Error())
+		errMsg = errMsg + p.Sprintf(LNG_ERR_GETCERT_SRV_S, url, err.Error())
 		return errMsg
 	}
 
 	err = verifyHostname(conn, url)
 	if err != nil {
-		errMsg = errMsg + p.Sprintf("ERROR: name mismatch for server's certificate - %s: %s\n", url, err.Error())
+		errMsg = errMsg + p.Sprintf(LNG_ERR_NAME_MISM_S, url, err.Error())
 		return errMsg
 	}
 
@@ -109,10 +141,10 @@ func chk(url string) string {
 	currentTime := time.Now()
         diff := expiry.Sub(currentTime)
         daysLeft := int(math.Round(diff.Hours() / 24))
-        msg = msg + p.Sprintf("Server: %s\n", url)
-	msg = msg + p.Sprintf("Issuer: %s\n", issuer(fmt.Sprintf("%s", conn.ConnectionState().PeerCertificates[0].Issuer)))
-	msg = msg + p.Sprintf("Expires: %v\n", expiry.Format(time.RFC1123))
-	msg = msg + p.Sprintf("%d days left\n", daysLeft)
+        msg = msg + p.Sprintf(LNG_SERVER_S, url)
+	msg = msg + p.Sprintf(LNG_ISSUER_S, issuer(fmt.Sprintf("%s", conn.ConnectionState().PeerCertificates[0].Issuer)))
+	msg = msg + p.Sprintf(LNG_EXPIRES_V, expiry.Format(time.RFC1123))
+	msg = msg + p.Sprintf(LNG_DAYSLEFT_D, daysLeft)
 	msg = msg + "=================\n"
 	fmt.Printf(msg)
 	if daysLeft <= *MinDays {
@@ -153,7 +185,7 @@ func sendMessage(text string) (bool, error) {
 	}
 
 	if response.StatusCode != 200 {
-		err = errors.New(p.Sprintf("ERROR: response status code is not OK (200): %d", response.StatusCode))
+		err = errors.New(p.Sprintf(LNG_ERR_STATUS_N200_D, response.StatusCode))
 		return false, err
 	}
 
@@ -170,12 +202,12 @@ func main() {
 	var urls *[]string
 
         kingpin.Version("0.0.1")
-        MinDays = kingpin.Flag("min-days", "minimal remaining active days for a certificate").Default("5").Short('m').Int()
-        SendDelay = kingpin.Flag("send-delay", "delay between message sending attempts (in seconds)").Default("3s").Short('d').Duration()
-        MaxTries = kingpin.Flag("max-tries", "maximum number of message sending attempts").Default("5").Short('x').Int()
-        TgmToken = kingpin.Flag("tgm-token", "Telegram token for sending messsages").Short('t').Required().String()
-        TgmChatId = kingpin.Flag("tgm-chatid", "Telegram chat id for sending messsages").Short('c').Required().String()
-        urls = kingpin.Arg("servers", "server names to check").Required().Strings()
+        MinDays = kingpin.Flag("min-days", p.Sprintf(LNG_CERT_MIN_DAYS)).Default("5").Short('m').Int()
+        SendDelay = kingpin.Flag("send-delay", p.Sprintf(LNG_DELAY_BTW_SND_ATT)).Default("3s").Short('d').Duration()
+        MaxTries = kingpin.Flag("max-tries", p.Sprintf(LNG_MAX_NUM_SND_ATT)).Default("5").Short('x').Int()
+        TgmToken = kingpin.Flag("tgm-token", p.Sprintf(LNG_TGM_TOKEN)).Short('t').Required().String()
+        TgmChatId = kingpin.Flag("tgm-chatid", p.Sprintf(LNG_TGM_CHATID)).Short('c').Required().String()
+        urls = kingpin.Arg("servers", p.Sprintf(LNG_SRV_NAMES)).Required().Strings()
         kingpin.Parse()
 
 	msg := ""
@@ -185,21 +217,21 @@ func main() {
 
 	duration := (*SendDelay) * time.Second
 	if msg != "" {
-		p.Printf("ERRORS FOUND:\n%s\n", msg)
-		p.Printf("Sending...\n")
+		p.Printf(LNG_ERRORS_FOUND_S, msg)
+		p.Printf(LNG_SENDING)
 		done := false
 		tries := 0
 		for !done {
 			_, err = sendMessage(msg)
 			if err == nil {
 				done = true
-				p.Println("OK!")
+				p.Printf(LNG_OK)
 			} else {
-				p.Printf("ERROR: message sending failed (%s)! Pausing for %d s...\n", err, SendDelay)
+				p.Printf(LNG_ERR_SEND_FAIL_S_D, err, SendDelay)
 				time.Sleep(duration)
 				tries++
 				if tries >= *MaxTries {
-					panic(p.Sprintf("Failed to send message after %d retries!\n", tries))
+					panic(p.Sprintf(LNG_ERR_SEND_FAIL_R_D, tries))
 				}
 			}
 		}
