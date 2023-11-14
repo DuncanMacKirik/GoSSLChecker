@@ -26,6 +26,12 @@ var TgmChatId *string
 var p *message.Printer
 var matcher language.Matcher
 
+const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
+const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
+const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
+const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
+const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
+const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
 const LNG_ERR_GETCERT_SRV_S = "ERROR: problem getting certificate for server %s: %s\n"
 const LNG_ERR_NAME_MISM_S   = "ERROR: name mismatch for server's certificate - %s: %s\n"
 const LNG_ERR_STATUS_N200_D = "ERROR: response status code is not OK (200): %d"
@@ -38,14 +44,21 @@ const LNG_SERVER_S          = "Server: %s\n"
 const LNG_ISSUER_S          = "Issuer: %s\n"
 const LNG_EXPIRES_V         = "Expires: %v\n"
 const LNG_DAYSLEFT_D        = "%d days left\n"
-const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
-const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
-const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
-const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
-const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
-const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
 
 func initLangs() {
+        message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
+	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
+	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
+	message.SetString(language.Russian, LNG_DELAY_BTW_SND_ATT, "длительность задержки между попытками отправки сообщений в Telegram (в секундах)")
+	message.SetString(language.AmericanEnglish, LNG_MAX_NUM_SND_ATT, LNG_MAX_NUM_SND_ATT)
+	message.SetString(language.Russian, LNG_MAX_NUM_SND_ATT, "максимальное количество попыток отправки сообщений в Telegram")
+	message.SetString(language.AmericanEnglish, LNG_TGM_TOKEN, LNG_TGM_TOKEN)
+	message.SetString(language.Russian, LNG_TGM_TOKEN, "значение токена Telegram для отправки сообщений")
+	message.SetString(language.AmericanEnglish, LNG_TGM_CHATID, LNG_TGM_CHATID)
+	message.SetString(language.Russian, LNG_TGM_CHATID, "значение chat id Telegram для отправки сообщений")
+	message.SetString(language.AmericanEnglish, LNG_SRV_NAMES, LNG_SRV_NAMES)
+	message.SetString(language.Russian, LNG_SRV_NAMES, "имя (имена) серверов для проверки (через пробел)")
+
 	message.SetString(language.AmericanEnglish, LNG_ERR_GETCERT_SRV_S, LNG_ERR_GETCERT_SRV_S)
 	message.SetString(language.Russian, LNG_ERR_GETCERT_SRV_S, "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
 	message.SetString(language.AmericanEnglish, LNG_ERR_NAME_MISM_S, LNG_ERR_NAME_MISM_S)
@@ -71,19 +84,6 @@ func initLangs() {
 	message.SetString(language.Russian, LNG_EXPIRES_V,  "Истекает: %v\n")
 	message.SetString(language.AmericanEnglish, LNG_DAYSLEFT_D, LNG_DAYSLEFT_D)
 	message.SetString(language.Russian, LNG_DAYSLEFT_D, "Осталось: %d дней\n")
-
-        message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
-	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
-	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
-	message.SetString(language.Russian, LNG_DELAY_BTW_SND_ATT, "длительность задержки между попытками отправки сообщений в Telegram (в секундах)")
-	message.SetString(language.AmericanEnglish, LNG_MAX_NUM_SND_ATT, LNG_MAX_NUM_SND_ATT)
-	message.SetString(language.Russian, LNG_MAX_NUM_SND_ATT, "максимальное количество попыток отправки сообщений в Telegram")
-	message.SetString(language.AmericanEnglish, LNG_TGM_TOKEN, LNG_TGM_TOKEN)
-	message.SetString(language.Russian, LNG_TGM_TOKEN, "значение токена Telegram для отправки сообщений")
-	message.SetString(language.AmericanEnglish, LNG_TGM_CHATID, LNG_TGM_CHATID)
-	message.SetString(language.Russian, LNG_TGM_CHATID, "значение chat id Telegram для отправки сообщений")
-	message.SetString(language.AmericanEnglish, LNG_SRV_NAMES, LNG_SRV_NAMES)
-	message.SetString(language.Russian, LNG_SRV_NAMES, "имя (имена) серверов для проверки (через пробел)")
 }
 
 func issuer(info string) string {
