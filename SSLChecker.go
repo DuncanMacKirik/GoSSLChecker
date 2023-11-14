@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	flag "github.com/spf13/pflag"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -12,14 +13,13 @@ import (
 	"os"
 	"strings"
 	"time"
-	"github.com/alecthomas/kingpin/v2"
 	"github.com/cloudfoundry/jibber_jabber"
 	"golang.org/x/text/message"
 	"golang.org/x/text/language"
 )
 
 var MinDays *int
-var SendDelay *time.Duration
+var SendDelay *int
 var MaxTries *int
 var TgmToken *string
 var TgmChatId *string
@@ -217,26 +217,21 @@ func main() {
 	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
 	p = message.NewPrinter(tag)
 
-	var urls *[]string
-
-        kingpin.Version("0.1.0")
-        _ = kingpin.Flag("lang-en", p.Sprintf(LNG_LANG_EN)).Short('e').Bool()
-        _ = kingpin.Flag("lang-ru", p.Sprintf(LNG_LANG_RU)).Short('r').Bool()
-        MinDays = kingpin.Flag("min-days", p.Sprintf(LNG_CERT_MIN_DAYS)).Default("5").Short('m').Int()
-        SendDelay = kingpin.Flag("send-delay", p.Sprintf(LNG_DELAY_BTW_SND_ATT)).Default("3s").Short('d').Duration()
-        MaxTries = kingpin.Flag("max-tries", p.Sprintf(LNG_MAX_NUM_SND_ATT)).Default("5").Short('x').Int()
-        TgmToken = kingpin.Flag("tgm-token", p.Sprintf(LNG_TGM_TOKEN)).Short('t').Required().String()
-        TgmChatId = kingpin.Flag("tgm-chatid", p.Sprintf(LNG_TGM_CHATID)).Short('c').Required().String()
-        urls = kingpin.Arg("servers", p.Sprintf(LNG_SRV_NAMES)).Required().Strings()
-        kingpin.Parse()
-        fmt.Printf("%s", (*urls)[0]) 
+        _ = flag.BoolP("lang-en", "e", false, p.Sprintf(LNG_LANG_EN))
+        _ = flag.BoolP("lang-ru", "r", false, p.Sprintf(LNG_LANG_RU))
+        MinDays = flag.IntP("min-days", "d", 5, p.Sprintf(LNG_CERT_MIN_DAYS))
+        SendDelay = flag.IntP("send-delay", "s", 3, p.Sprintf(LNG_DELAY_BTW_SND_ATT))
+        MaxTries = flag.IntP("max-tries", "x", 5, p.Sprintf(LNG_MAX_NUM_SND_ATT))
+        TgmToken = flag.StringP("tgm-token", "t", "", p.Sprintf(LNG_TGM_TOKEN))
+        TgmChatId = flag.StringP("tgm-chatid", "c", "", p.Sprintf(LNG_TGM_CHATID))
+        flag.Parse()
 
 	msg := ""
-	for _, value := range *urls {
+	for _, value := range flag.Args() {
 		msg = msg + chk(value)
 	}
 
-	duration := (*SendDelay) * time.Second
+	duration := time.Duration(*SendDelay) * time.Second
 	if msg != "" {
 		p.Printf(LNG_ERRORS_FOUND_S, msg)
 		p.Printf(LNG_SENDING)
@@ -248,7 +243,7 @@ func main() {
 				done = true
 				p.Printf(LNG_OK)
 			} else {
-				p.Printf(LNG_ERR_SEND_FAIL_S_D, err, SendDelay)
+				p.Printf(LNG_ERR_SEND_FAIL_S_D, err, *SendDelay)
 				time.Sleep(duration)
 				tries++
 				if tries >= *MaxTries {
