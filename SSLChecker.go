@@ -18,6 +18,7 @@ import (
 	"golang.org/x/text/language"
 )
 
+var GetVer *bool
 var MinDays *int
 var SendDelay *int
 var MaxTries *int
@@ -31,6 +32,7 @@ const APP_VERSION           = "0.3.0"
 
 const LNG_LANG_EN           = "force usage of English language, instead of cheking the OS defaults"
 const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
+const LNG_GET_VERSION       = "print program version and exit"
 const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
 const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
 const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
@@ -52,6 +54,8 @@ const LNG_EXPIRES_V         = "Expires: %v\n"
 const LNG_DAYSLEFT_D        = "%d days left\n"
 
 func initLangs() {
+	message.SetString(language.AmericanEnglish, LNG_GET_VERSION, LNG_GET_VERSION)
+	message.SetString(language.Russian, LNG_GET_VERSION, "показать версию программы и выйти")
 	message.SetString(language.AmericanEnglish, LNG_LANG_EN, LNG_LANG_EN)
 	message.SetString(language.Russian, LNG_LANG_EN, "использовать английский язык (вместо попытки автоопределения языка ОС)")
 	message.SetString(language.AmericanEnglish, LNG_LANG_RU, LNG_LANG_RU)
@@ -135,8 +139,8 @@ func verifyHostname(conn *tls.Conn, url string) (err error) {
 }
 
 func fail(msg string) {
-            fmt.Fprintf(os.Stderr, msg)
-            os.Exit(2)
+        fmt.Fprintf(os.Stderr, msg)
+        os.Exit(2)
 }
 
 func chk(url string) string {
@@ -228,12 +232,18 @@ func main() {
 
         _ = flag.BoolP("lang-en", "e", false, p.Sprintf(LNG_LANG_EN))
         _ = flag.BoolP("lang-ru", "r", false, p.Sprintf(LNG_LANG_RU))
+        GetVer = flag.BoolP("version", "V", false, p.Sprintf(LNG_GET_VERSION))
         MinDays = flag.IntP("min-days", "m", 5, p.Sprintf(LNG_CERT_MIN_DAYS))
         SendDelay = flag.IntP("send-delay", "d", 3, p.Sprintf(LNG_DELAY_BTW_SND_ATT))
         MaxTries = flag.IntP("max-tries", "x", 5, p.Sprintf(LNG_MAX_NUM_SND_ATT))
         TgmToken = flag.StringP("tgm-token", "t", "", p.Sprintf(LNG_TGM_TOKEN))
         TgmChatId = flag.StringP("tgm-chatid", "c", "", p.Sprintf(LNG_TGM_CHATID))
         flag.Parse()
+
+        if *GetVer {
+        	fmt.Println(APP_VERSION)
+        	os.Exit(0)
+        }
 
         if (len(flag.Args()) == 0) || (*TgmToken == "") || (*TgmChatId == "") {
         	flag.Usage()
