@@ -42,6 +42,7 @@ const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
 const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
 const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
 const LNG_ERR_MISSING_PAR   = "ERROR: missing required parameter(s)!\n"
+const LNG_ERR_MISSING_URL   = "ERROR: no URL(s) specified for checking!\n"
 const LNG_ERR_GETCERT_SRV_S = "ERROR: problem getting certificate for server %s: %s\n"
 const LNG_ERR_NAME_MISM_S   = "ERROR: name mismatch for server's certificate - %s: %s\n"
 const LNG_ERR_STATUS_N200_D = "ERROR: response status code is not OK (200): %d"
@@ -82,6 +83,8 @@ func initLangs() {
 
         message.SetString(language.AmericanEnglish, LNG_ERR_MISSING_PAR, LNG_ERR_MISSING_PAR) 
         message.SetString(language.Russian, LNG_ERR_MISSING_PAR, "ОШИБКА: не задан(ы) один или более обязательных параметров!\n")
+        message.SetString(language.AmericanEnglish, LNG_ERR_MISSING_URL, LNG_ERR_MISSING_URL) 
+        message.SetString(language.Russian, LNG_ERR_MISSING_URL, "ОШИБКА: не задан(ы) один или более URL сервера(-ов) для проверки!\n")
 	message.SetString(language.AmericanEnglish, LNG_ERR_GETCERT_SRV_S, LNG_ERR_GETCERT_SRV_S)
 	message.SetString(language.Russian, LNG_ERR_GETCERT_SRV_S, "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
 	message.SetString(language.AmericanEnglish, LNG_ERR_NAME_MISM_S, LNG_ERR_NAME_MISM_S)
@@ -376,6 +379,9 @@ VERSION:
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
+			if cCtx.NArg() == 0 {
+				fail(p.Sprintf(LNG_ERR_MISSING_URL))
+			}
 			run(cCtx.Args())
 			return nil
 		},
