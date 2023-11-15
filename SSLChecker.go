@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	flag "github.com/spf13/pflag"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -14,16 +13,17 @@ import (
 	"strings"
 	"time"
 	"github.com/cloudfoundry/jibber_jabber"
+	"github.com/urfave/cli/v2"
 	"golang.org/x/text/message"
 	"golang.org/x/text/language"
 )
 
-var GetVer *bool
-var MinDays *int
-var SendDelay *int
-var MaxTries *int
-var TgmToken *string
-var TgmChatId *string
+var GetVer bool
+var MinDays int
+var SendDelay int
+var MaxTries int
+var TgmToken string
+var TgmChatId string
 
 var p *message.Printer
 var matcher language.Matcher
@@ -168,14 +168,14 @@ func chk(url string) string {
 	msg = msg + p.Sprintf(LNG_DAYSLEFT_D, daysLeft)
 	msg = msg + "=================\n"
 	fmt.Printf(msg)
-	if daysLeft <= *MinDays {
+	if daysLeft <= MinDays {
 		errMsg = msg
 	}
 	return errMsg
 }
 
 func getUrl() string {
-	return fmt.Sprintf("https://api.telegram.org/bot%s", *TgmToken)
+	return fmt.Sprintf("https://api.telegram.org/bot%s", TgmToken)
 }
 
 func sendMessage(text string) (bool, error) {
@@ -184,7 +184,7 @@ func sendMessage(text string) (bool, error) {
 
 	url := fmt.Sprintf("%s/sendMessage", getUrl())
 	body, _ := json.Marshal(map[string]string{
-		"chat_id": *TgmChatId,
+		"chat_id": TgmChatId,
 		"text":    text,
 	})
 	response, err = http.Post(
@@ -212,9 +212,38 @@ func sendMessage(text string) (bool, error) {
 	return true, nil
 }
 
+func run(Args cli.Args) {
+	msg := ""
+	for i := 0; i < Args.Len(); i++ {
+		msg = msg + chk(Args.Get(i))
+	}
+
+	duration := time.Duration(SendDelay) * time.Second
+	if msg != "" {
+		p.Printf(LNG_ERRORS_FOUND_S, msg)
+		p.Printf(LNG_SENDING)
+		done := false
+		tries := 0
+		for !done {
+			_, err := sendMessage(msg)
+			if err == nil {
+				done = true
+				p.Printf(LNG_OK)
+			} else {
+				p.Fprintf(os.Stderr, LNG_ERR_SEND_FAIL_S_D, err, SendDelay)
+				time.Sleep(duration)
+				tries++
+				if tries >= MaxTries {
+					fail(p.Sprintf(LNG_ERR_SEND_FAIL_R_D, tries))
+				}
+			}
+		}
+	}
+}
+
 func main() {
 	initLangs()
-	userLanguage, err := jibber_jabber.DetectLanguage()
+	userLanguage, _ := jibber_jabber.DetectLanguage()
 
 	for _, value := range os.Args {
 	        value = strings.ToLower(strings.TrimSpace(value))
@@ -230,51 +259,94 @@ func main() {
 	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
 	p = message.NewPrinter(tag)
 
-        _ = flag.BoolP("lang-en", "e", false, p.Sprintf(LNG_LANG_EN))
-        _ = flag.BoolP("lang-ru", "r", false, p.Sprintf(LNG_LANG_RU))
-        GetVer = flag.BoolP("version", "V", false, p.Sprintf(LNG_GET_VERSION))
-        MinDays = flag.IntP("min-days", "m", 5, p.Sprintf(LNG_CERT_MIN_DAYS))
-        SendDelay = flag.IntP("send-delay", "d", 3, p.Sprintf(LNG_DELAY_BTW_SND_ATT))
-        MaxTries = flag.IntP("max-tries", "x", 5, p.Sprintf(LNG_MAX_NUM_SND_ATT))
-        TgmToken = flag.StringP("tgm-token", "t", "", p.Sprintf(LNG_TGM_TOKEN))
-        TgmChatId = flag.StringP("tgm-chatid", "c", "", p.Sprintf(LNG_TGM_CHATID))
-        flag.Parse()
-
-        if *GetVer {
-        	fmt.Println(APP_VERSION)
-        	os.Exit(0)
-        }
-
-        if (len(flag.Args()) == 0) || (*TgmToken == "") || (*TgmChatId == "") {
-        	flag.Usage()
-        	fmt.Println()
-        	fail(p.Sprintf(LNG_ERR_MISSING_PAR))
-        }
-
-	msg := ""
-	for _, value := range flag.Args() {
-		msg = msg + chk(value)
+	cli.VersionFlag = &cli.BoolFlag {
+		Name:    "version",
+		Aliases: []string{"V"},
+		Usage:   p.Sprintf(LNG_GET_VERSION), 
+	}
+	cli.VersionPrinter = func(cCtx *cli.Context) {
+		fmt.Printf("%s version %s\n", cCtx.App.Name, cCtx.App.Version)
+	}
+	cli.AppHelpTemplate = `NAME:
+   {{.Name}} - {{.Usage}}
+USAGE:
+   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+   {{if len .Authors}}
+AUTHOR:
+   {{range .Authors}}{{ . }}{{end}}
+   {{end}}{{if .Commands}}
+COMMANDS:
+{{range .Commands}}{{if not .HideHelp}}   {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+GLOBAL OPTIONS:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{end}}{{if .Copyright }}
+COPYRIGHT:
+   {{.Copyright}}
+   {{end}}{{if .Version}}
+VERSION:
+   {{.Version}}
+   {{end}}
+`
+	
+	app := &cli.App {
+		Name:    "SSLChecker",
+		Version: APP_VERSION,
+		UseShortOptionHandling: true,
+		Flags:  []cli.Flag {
+			&cli.IntFlag {
+				Name:  "min-days",
+                                Aliases: []string{"m"},
+				Value: 5,
+				Usage: p.Sprintf(LNG_CERT_MIN_DAYS),
+				Destination: &MinDays,
+			},            
+			&cli.IntFlag {
+				Name:  "send-delay",
+                                Aliases: []string{"d"},
+				Value: 5,
+				Usage: p.Sprintf(LNG_DELAY_BTW_SND_ATT),
+				Destination: &SendDelay,
+			},            
+			&cli.IntFlag {
+				Name:  "max-tries",
+                                Aliases: []string{"x"},
+				Value: 5,
+				Usage: p.Sprintf(LNG_MAX_NUM_SND_ATT),
+				Destination: &MaxTries,
+			},            
+			&cli.StringFlag {
+				Name:  "tgm-token",
+                                Aliases: []string{"t"},
+				Usage: p.Sprintf(LNG_TGM_TOKEN),
+				Required: true,
+				Destination: &TgmToken,
+			},
+			&cli.StringFlag {
+				Name:  "tgm-chatid",
+                                Aliases: []string{"c"},
+				Usage: p.Sprintf(LNG_TGM_CHATID),
+                                Required: true,
+                                Destination: &TgmChatId,
+			},
+			&cli.BoolFlag {
+				Name:  "lang-en",
+                                Aliases: []string{"e"},
+				Usage: p.Sprintf(LNG_LANG_EN),
+			},
+			&cli.BoolFlag {
+				Name:  "lang-ru",
+                                Aliases: []string{"r"},
+				Usage: p.Sprintf(LNG_LANG_RU),
+			},
+		},
+		Action: func(cCtx *cli.Context) error {
+			run(cCtx.Args())
+			return nil
+		},
 	}
 
-	duration := time.Duration(*SendDelay) * time.Second
-	if msg != "" {
-		p.Printf(LNG_ERRORS_FOUND_S, msg)
-		p.Printf(LNG_SENDING)
-		done := false
-		tries := 0
-		for !done {
-			_, err = sendMessage(msg)
-			if err == nil {
-				done = true
-				p.Printf(LNG_OK)
-			} else {
-				p.Fprintf(os.Stderr, LNG_ERR_SEND_FAIL_S_D, err, *SendDelay)
-				time.Sleep(duration)
-				tries++
-				if tries >= *MaxTries {
-					fail(p.Sprintf(LNG_ERR_SEND_FAIL_R_D, tries))
-				}
-			}
-		}
+	if err := app.Run(os.Args); err != nil {
+		fail(err.Error())
 	}
 }
+
