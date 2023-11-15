@@ -30,8 +30,10 @@ var matcher language.Matcher
 
 const APP_VERSION           = "0.3.0"
 
+const LNG_PROGRAM_USAGE     = "Check for SSL/TLS certificates that are expiring soon, and report them to the specified Telegram chat"
 const LNG_LANG_EN           = "force usage of English language, instead of cheking the OS defaults"
 const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
+const LNG_GET_HELP          = "print program usage information and exit"
 const LNG_GET_VERSION       = "print program version and exit"
 const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
 const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
@@ -54,12 +56,17 @@ const LNG_EXPIRES_V         = "Expires: %v\n"
 const LNG_DAYSLEFT_D        = "%d days left\n"
 
 func initLangs() {
-	message.SetString(language.AmericanEnglish, LNG_GET_VERSION, LNG_GET_VERSION)
-	message.SetString(language.Russian, LNG_GET_VERSION, "показать версию программы и выйти")
+	message.SetString(language.AmericanEnglish, LNG_PROGRAM_USAGE, LNG_PROGRAM_USAGE)
+	message.SetString(language.Russian, LNG_PROGRAM_USAGE, "проверить сертификаты SSL/TLS на предмет скорого истечения срока, с отправкой предупреждений в чат Telegram")
+
 	message.SetString(language.AmericanEnglish, LNG_LANG_EN, LNG_LANG_EN)
 	message.SetString(language.Russian, LNG_LANG_EN, "использовать английский язык (вместо попытки автоопределения языка ОС)")
 	message.SetString(language.AmericanEnglish, LNG_LANG_RU, LNG_LANG_RU)
 	message.SetString(language.Russian, LNG_LANG_RU, "использовать русский язык (вместо попытки автоопределения языка ОС)")
+	message.SetString(language.AmericanEnglish, LNG_GET_VERSION, LNG_GET_VERSION)
+	message.SetString(language.Russian, LNG_GET_VERSION, "показать версию программы и выйти")
+	message.SetString(language.AmericanEnglish, LNG_GET_HELP, LNG_GET_HELP)
+	message.SetString(language.Russian, LNG_GET_HELP, "показать короткую справку об использовании программы и выйти")
         message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
 	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
 	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
@@ -259,25 +266,51 @@ func main() {
 	tag, _, _ := matcher.Match(language.MustParse(userLanguage))
 	p = message.NewPrinter(tag)
 
+	cli.HelpFlag = &cli.BoolFlag {
+		Name:    "help",
+		Aliases: []string {"h"},
+		Usage:   p.Sprintf(LNG_GET_HELP),
+	}
 	cli.VersionFlag = &cli.BoolFlag {
 		Name:    "version",
-		Aliases: []string{"V"},
+		Aliases: []string {"V"},
 		Usage:   p.Sprintf(LNG_GET_VERSION), 
 	}
 	cli.VersionPrinter = func(cCtx *cli.Context) {
 		fmt.Printf("%s version %s\n", cCtx.App.Name, cCtx.App.Version)
 	}
-	cli.AppHelpTemplate = `NAME:
+
+	if userLanguage == "ru" {
+		cli.AppHelpTemplate = `НАЗВАНИЕ:
    {{.Name}} - {{.Usage}}
+
+ИСПОЛЬЗОВАНИЕ:
+   {{.HelpName}} опции url1 [url2 ...]
+   {{if len .Authors}}
+АВТОР:
+   {{range .Authors}}{{ . }}{{end}}
+   {{end}}{{if .Commands}}
+ОПЦИИ:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{end}}{{if .Copyright }}
+АВТОРСКИЕ ПРАВА:
+   {{.Copyright}}
+   {{end}}{{if .Version}}
+ВЕРСИЯ:
+   {{.Version}}
+   {{end}}
+`
+	} else {
+		cli.AppHelpTemplate = `NAME:
+   {{.Name}} - {{.Usage}}
+
 USAGE:
-   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+   {{.HelpName}} options url1 [url2 ...]
    {{if len .Authors}}
 AUTHOR:
    {{range .Authors}}{{ . }}{{end}}
    {{end}}{{if .Commands}}
-COMMANDS:
-{{range .Commands}}{{if not .HideHelp}}   {{join .Names ", "}}{{ "\t"}}{{.Usage}}{{ "\n" }}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
-GLOBAL OPTIONS:
+OPTIONS:
    {{range .VisibleFlags}}{{.}}
    {{end}}{{end}}{{if .Copyright }}
 COPYRIGHT:
@@ -287,11 +320,14 @@ VERSION:
    {{.Version}}
    {{end}}
 `
-	
+	}
+
 	app := &cli.App {
 		Name:    "SSLChecker",
 		Version: APP_VERSION,
+		Usage:   p.Sprintf(LNG_PROGRAM_USAGE),
 		UseShortOptionHandling: true,
+		Commands: nil,
 		Flags:  []cli.Flag {
 			&cli.IntFlag {
 				Name:  "min-days",
@@ -303,7 +339,7 @@ VERSION:
 			&cli.IntFlag {
 				Name:  "send-delay",
                                 Aliases: []string{"d"},
-				Value: 5,
+				Value: 3,
 				Usage: p.Sprintf(LNG_DELAY_BTW_SND_ATT),
 				Destination: &SendDelay,
 			},            
