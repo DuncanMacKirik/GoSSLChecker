@@ -28,7 +28,7 @@ var TgmChatId string
 var p *message.Printer
 var matcher language.Matcher
 
-const APP_VERSION           = "0.3.0"
+const APP_VERSION           = "0.4.0"
 
 const LNG_PROGRAM_USAGE     = "Check for SSL/TLS certificates that are expiring soon, and report them to the specified Telegram chat"
 const LNG_APP_VERSION       = "%s version %s\n"
