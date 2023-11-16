@@ -44,7 +44,6 @@ const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
 const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
 const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
 const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
-const LNG_CHECKING_URL      = "checking URL: %s"
 const LNG_ERR_MISSING_PAR   = "ERROR: missing required parameter(s)!\n"
 const LNG_ERR_INVALID_FLAG  = "ERROR: unknown flag specified: -" // prefix string
 const LNG_ERR_MISSING_URL   = "ERROR: no URL(s) specified for checking!\n"
@@ -54,6 +53,7 @@ const LNG_ERR_STATUS_N200_D = "ERROR: response status code is not OK (200): %d"
 const LNG_ERR_SEND_FAIL_S_D = "ERROR: message sending failed (%s)! Pausing for %d s...\n"
 const LNG_ERR_SEND_FAIL_R_D = "Failed to send message after %d retries!\n"
 const LNG_ERRORS_FOUND_S    = "ERRORS FOUND:\n%s\n"
+const LNG_CHECKING_URL      = "Checking URL: %s\n"
 const LNG_SENDING           = "Sending...\n"
 const LNG_OK                = "OK!\n"
 const LNG_SERVER_S          = "Server: %s\n"
@@ -107,6 +107,8 @@ func initLangs() {
 	message.SetString(language.AmericanEnglish, LNG_ERRORS_FOUND_S, LNG_ERRORS_FOUND_S)
 	message.SetString(language.Russian, LNG_ERRORS_FOUND_S, "НАЙДЕННЫЕ ОШИБКИ:\n%s\n")
 
+	message.SetString(language.AmericanEnglish, LNG_CHECKING_URL, LNG_CHECKING_URL)
+	message.SetString(language.Russian, LNG_CHECKING_URL, "Проверка URL: %s\n")
 	message.SetString(language.AmericanEnglish, LNG_SENDING,  LNG_SENDING)
 	message.SetString(language.Russian, LNG_SENDING, "Отправка...\n")
 	message.SetString(language.AmericanEnglish, LNG_OK, LNG_OK)
@@ -251,7 +253,7 @@ func run(Args cli.Args) {
 	for i := 0; i < Args.Len(); i++ {
 		url := Args.Get(i)
 		if VerboseMode {
-			
+			p.Printf(LNG_CHECKING_URL, url)
 		}
 		msg = msg + chk(url)
 	}
