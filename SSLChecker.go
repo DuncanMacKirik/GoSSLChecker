@@ -31,6 +31,7 @@ var matcher language.Matcher
 const APP_VERSION           = "0.3.0"
 
 const LNG_PROGRAM_USAGE     = "Check for SSL/TLS certificates that are expiring soon, and report them to the specified Telegram chat"
+const LNG_APP_VERSION       = "%s version %s\n"
 const LNG_LANG_EN           = "force usage of English language, instead of cheking the OS defaults"
 const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
 const LNG_GET_HELP          = "print program usage information and exit"
@@ -42,6 +43,7 @@ const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
 const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
 const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
 const LNG_ERR_MISSING_PAR   = "ERROR: missing required parameter(s)!\n"
+const LNG_ERR_INVALID_FLAG  = "ERROR: unknown flag specified: -" // prefix string
 const LNG_ERR_MISSING_URL   = "ERROR: no URL(s) specified for checking!\n"
 const LNG_ERR_GETCERT_SRV_S = "ERROR: problem getting certificate for server %s: %s\n"
 const LNG_ERR_NAME_MISM_S   = "ERROR: name mismatch for server's certificate - %s: %s\n"
@@ -59,6 +61,8 @@ const LNG_DAYSLEFT_D        = "%d days left\n"
 func initLangs() {
 	message.SetString(language.AmericanEnglish, LNG_PROGRAM_USAGE, LNG_PROGRAM_USAGE)
 	message.SetString(language.Russian, LNG_PROGRAM_USAGE, "проверить сертификаты SSL/TLS на предмет скорого истечения срока, с отправкой предупреждений в чат Telegram")
+	message.SetString(language.AmericanEnglish, LNG_APP_VERSION, LNG_APP_VERSION)
+	message.SetString(language.Russian, LNG_APP_VERSION, "%s, версия %s\n")
 
 	message.SetString(language.AmericanEnglish, LNG_LANG_EN, LNG_LANG_EN)
 	message.SetString(language.Russian, LNG_LANG_EN, "использовать английский язык (вместо попытки автоопределения языка ОС)")
@@ -273,14 +277,16 @@ func main() {
 		Name:    "help",
 		Aliases: []string {"h"},
 		Usage:   p.Sprintf(LNG_GET_HELP),
+		DisableDefaultText: true,
 	}
 	cli.VersionFlag = &cli.BoolFlag {
 		Name:    "version",
 		Aliases: []string {"V"},
 		Usage:   p.Sprintf(LNG_GET_VERSION), 
+		DisableDefaultText: true,
 	}
 	cli.VersionPrinter = func(cCtx *cli.Context) {
-		fmt.Printf("%s version %s\n", cCtx.App.Name, cCtx.App.Version)
+		fmt.Printf(p.Sprintf(LNG_APP_VERSION, cCtx.App.Name, cCtx.App.Version))
 	}
 
 	if userLanguage == "ru" {
@@ -371,11 +377,13 @@ VERSION:
 				Name:  "lang-en",
                                 Aliases: []string{"e"},
 				Usage: p.Sprintf(LNG_LANG_EN),
+				DisableDefaultText: true,
 			},
 			&cli.BoolFlag {
 				Name:  "lang-ru",
                                 Aliases: []string{"r"},
 				Usage: p.Sprintf(LNG_LANG_RU),
+				DisableDefaultText: true,
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
