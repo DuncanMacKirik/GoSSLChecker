@@ -22,13 +22,14 @@ var GetVer bool
 var MinDays int
 var SendDelay int
 var MaxTries int
+var VerboseMode bool
 var TgmToken string
 var TgmChatId string
 
 var p *message.Printer
 var matcher language.Matcher
 
-const APP_VERSION           = "0.4.0"
+const APP_VERSION           = "0.4.4"
 
 const LNG_PROGRAM_USAGE     = "Check for SSL/TLS certificates that are expiring soon, and report them to the specified Telegram chat"
 const LNG_APP_VERSION       = "%s version %s\n"
@@ -36,12 +37,14 @@ const LNG_LANG_EN           = "force usage of English language, instead of cheki
 const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
 const LNG_GET_HELP          = "print program usage information and exit"
 const LNG_GET_VERSION       = "print program version and exit"
+const LNG_VERBOSE_MODE      = "verbose mode"
 const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
 const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
 const LNG_MAX_NUM_SND_ATT   = "maximum number of message sending attempts"
 const LNG_TGM_TOKEN         = "Telegram token for sending messsages"
 const LNG_TGM_CHATID        = "Telegram chat id for sending messsages"
 const LNG_SRV_NAMES         = "server name(s) to check (separated by spaces)"
+const LNG_CHECKING_URL      = "checking URL: %s"
 const LNG_ERR_MISSING_PAR   = "ERROR: missing required parameter(s)!\n"
 const LNG_ERR_INVALID_FLAG  = "ERROR: unknown flag specified: -" // prefix string
 const LNG_ERR_MISSING_URL   = "ERROR: no URL(s) specified for checking!\n"
@@ -72,6 +75,8 @@ func initLangs() {
 	message.SetString(language.Russian, LNG_GET_VERSION, "показать версию программы и выйти")
 	message.SetString(language.AmericanEnglish, LNG_GET_HELP, LNG_GET_HELP)
 	message.SetString(language.Russian, LNG_GET_HELP, "показать короткую справку об использовании программы и выйти")
+	message.SetString(language.AmericanEnglish, LNG_VERBOSE_MODE, LNG_VERBOSE_MODE)
+	message.SetString(language.Russian, LNG_VERBOSE_MODE, "включить вывод подробной информации")
         message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
 	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
 	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
@@ -226,10 +231,29 @@ func sendMessage(text string) (bool, error) {
 	return true, nil
 }
 
+func printArgs() {
+//const LNG_SRV_NAMES         
+	fmt.Printf("%s: %d\n", p.Sprintf(LNG_CERT_MIN_DAYS),     MinDays)
+	fmt.Printf("%s: %d\n", p.Sprintf(LNG_DELAY_BTW_SND_ATT), SendDelay)
+	fmt.Printf("%s: %d\n", p.Sprintf(LNG_MAX_NUM_SND_ATT),   MaxTries)
+	fmt.Printf("%s: %s\n", p.Sprintf(LNG_TGM_TOKEN),         TgmToken)
+	fmt.Printf("%s: %s\n", p.Sprintf(LNG_TGM_CHATID),        TgmChatId)
+	fmt.Printf("%s: %t\n", p.Sprintf(LNG_VERBOSE_MODE),      VerboseMode)
+}
+
 func run(Args cli.Args) {
+	if VerboseMode {
+		//App.Version()
+		printArgs()
+	}
+
 	msg := ""
 	for i := 0; i < Args.Len(); i++ {
-		msg = msg + chk(Args.Get(i))
+		url := Args.Get(i)
+		if VerboseMode {
+			
+		}
+		msg = msg + chk(url)
 	}
 
 	duration := time.Duration(SendDelay) * time.Second
@@ -275,13 +299,13 @@ func main() {
 
 	cli.HelpFlag = &cli.BoolFlag {
 		Name:    "help",
-		Aliases: []string {"h"},
+		Aliases: []string{"h"},
 		Usage:   p.Sprintf(LNG_GET_HELP),
 		DisableDefaultText: true,
 	}
 	cli.VersionFlag = &cli.BoolFlag {
 		Name:    "version",
-		Aliases: []string {"V"},
+		Aliases: []string{"V"},
 		Usage:   p.Sprintf(LNG_GET_VERSION), 
 		DisableDefaultText: true,
 	}
@@ -384,6 +408,13 @@ VERSION:
                                 Aliases: []string{"r"},
 				Usage: p.Sprintf(LNG_LANG_RU),
 				DisableDefaultText: true,
+			},
+			&cli.BoolFlag {
+				Name:  "verbose",
+                                Aliases: []string{"v"},
+				Usage: p.Sprintf(LNG_VERBOSE_MODE),
+				DisableDefaultText: true,
+				Destination: &VerboseMode,
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
