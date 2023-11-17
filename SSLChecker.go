@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/text/message"
@@ -233,14 +234,22 @@ func sendMessage(text string) (bool, error) {
 	return true, nil
 }
 
+func printArg(name, val string) {
+	str := p.Sprintf(name)
+	r := []rune(str)
+	r[0] = unicode.ToUpper(r[0])
+	str = string(r)
+        fmt.Printf("%s: %v\n", str, val)
+}
+
 func printArgs() {
-//const LNG_SRV_NAMES         
-	fmt.Printf("%s: %d\n", p.Sprintf(LNG_CERT_MIN_DAYS),     MinDays)
-	fmt.Printf("%s: %d\n", p.Sprintf(LNG_DELAY_BTW_SND_ATT), SendDelay)
-	fmt.Printf("%s: %d\n", p.Sprintf(LNG_MAX_NUM_SND_ATT),   MaxTries)
-	fmt.Printf("%s: %s\n", p.Sprintf(LNG_TGM_TOKEN),         TgmToken)
-	fmt.Printf("%s: %s\n", p.Sprintf(LNG_TGM_CHATID),        TgmChatId)
-	fmt.Printf("%s: %t\n", p.Sprintf(LNG_VERBOSE_MODE),      VerboseMode)
+	names :=  [...]string{LNG_CERT_MIN_DAYS, LNG_DELAY_BTW_SND_ATT, LNG_MAX_NUM_SND_ATT, 
+		LNG_TGM_TOKEN, LNG_TGM_CHATID, LNG_VERBOSE_MODE}
+	values := [...]string{fmt.Sprintf("%d", MinDays), fmt.Sprintf("%d", SendDelay), fmt.Sprintf("%d", MaxTries),
+		TgmToken, TgmChatId, fmt.Sprintf("%t", VerboseMode)}
+	for i, name := range names {
+		printArg(name, values[i])
+	}
 }
 
 func run(Args cli.Args) {
