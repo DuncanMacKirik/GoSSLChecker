@@ -30,14 +30,14 @@ var TgmChatId string
 var p *message.Printer
 var matcher language.Matcher
 
-const APP_VERSION           = "0.4.4"
+const APP_VERSION           = "0.5.0"
 
 const LNG_PROGRAM_USAGE     = "Check for SSL/TLS certificates that are expiring soon, and report them to the specified Telegram chat"
 const LNG_APP_VERSION       = "%s version %s\n"
 const LNG_LANG_EN           = "force usage of English language, instead of cheking the OS defaults"
 const LNG_LANG_RU           = "force usage of Russian language, instead of cheking the OS defaults"
-const LNG_GET_HELP          = "print program usage information and exit"
 const LNG_GET_VERSION       = "print program version and exit"
+const LNG_GET_HELP          = "print program usage information and exit"
 const LNG_VERBOSE_MODE      = "verbose mode"
 const LNG_CERT_MIN_DAYS     = "minimal remaining active days for a certificate"
 const LNG_DELAY_BTW_SND_ATT = "delay between message sending attempts (in seconds)"
@@ -62,66 +62,45 @@ const LNG_ISSUER_S          = "Issuer: %s\n"
 const LNG_EXPIRES_V         = "Expires: %v\n"
 const LNG_DAYSLEFT_D        = "%d days left\n"
 
+var lngStrings = []struct {
+	en string;
+	ru string;
+}{
+	{en: LNG_PROGRAM_USAGE, ru: "проверить сертификаты SSL/TLS на предмет скорого истечения срока, с отправкой предупреждений в чат Telegram"},
+	{en: LNG_APP_VERSION, ru: "%s, версия %s\n"},
+	{en: LNG_LANG_EN, ru: "использовать английский язык (вместо попытки автоопределения языка ОС)"},
+	{en: LNG_LANG_RU, ru: "использовать русский язык (вместо попытки автоопределения языка ОС)"},
+	{en: LNG_GET_VERSION, ru: "показать версию программы и выйти"},
+	{en: LNG_GET_HELP, ru: "показать короткую справку об использовании программы и выйти"},
+	{en: LNG_VERBOSE_MODE, ru: "включить вывод подробной информации"},
+	{en: LNG_CERT_MIN_DAYS, ru: "минимально допустимое время истечения сертификата (в днях)"},
+	{en: LNG_DELAY_BTW_SND_ATT, ru: "длительность задержки между попытками отправки сообщений в Telegram (в секундах)"},
+	{en: LNG_MAX_NUM_SND_ATT, ru: "максимальное количество попыток отправки сообщений в Telegram"},
+	{en: LNG_TGM_TOKEN, ru: "значение токена Telegram для отправки сообщений"},
+	{en: LNG_TGM_CHATID, ru: "значение chat id Telegram для отправки сообщений"},
+	{en: LNG_SRV_NAMES, ru: "имя (имена) серверов для проверки (через пробел)"},
+	{en: LNG_ERR_MISSING_PAR, ru: "ОШИБКА: не задан(ы) один или более обязательных параметров!\n"},
+	{en: LNG_ERR_MISSING_URL, ru: "ОШИБКА: не задан(ы) один или более URL сервера(-ов) для проверки!\n"},
+	{en: LNG_ERR_GETCERT_SRV_S, ru: "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n"},
+	{en: LNG_ERR_NAME_MISM_S, ru: "ОШИБКА: неверное имя в сертификате сервера - %s: %s\n"},
+	{en: LNG_ERR_STATUS_N200_D, ru: "ОШИБКА: код статуса в ответе сервера ошибочный (не 200): %d"},
+	{en: LNG_ERR_SEND_FAIL_S_D, ru: "ОШИБКА: невозможно послать сообщение (%s)! Делаем паузу (%d с)...\n"},
+	{en: LNG_ERR_SEND_FAIL_R_D, ru: "Не удалось отправить сообщение с %d попыток!\n"},
+	{en: LNG_ERRORS_FOUND_S, ru: "НАЙДЕННЫЕ ОШИБКИ:\n%s\n"},
+	{en: LNG_CHECKING_URL, ru: "Проверка URL: %s\n"},
+	{en: LNG_SENDING, ru: "Отправка...\n"},
+	{en: LNG_OK, ru: "ОК!\n"},
+	{en: LNG_SERVER_S, ru:  "Сервер: %s\n"},
+	{en: LNG_ISSUER_S, ru:  "Выдан: %s\n"},
+	{en: LNG_EXPIRES_V, ru:  "Истекает: %v\n"},
+	{en: LNG_DAYSLEFT_D, ru: "Осталось: %d дней\n"},
+}
+
 func initLangs() {
-	message.SetString(language.AmericanEnglish, LNG_PROGRAM_USAGE, LNG_PROGRAM_USAGE)
-	message.SetString(language.Russian, LNG_PROGRAM_USAGE, "проверить сертификаты SSL/TLS на предмет скорого истечения срока, с отправкой предупреждений в чат Telegram")
-	message.SetString(language.AmericanEnglish, LNG_APP_VERSION, LNG_APP_VERSION)
-	message.SetString(language.Russian, LNG_APP_VERSION, "%s, версия %s\n")
-
-	message.SetString(language.AmericanEnglish, LNG_LANG_EN, LNG_LANG_EN)
-	message.SetString(language.Russian, LNG_LANG_EN, "использовать английский язык (вместо попытки автоопределения языка ОС)")
-	message.SetString(language.AmericanEnglish, LNG_LANG_RU, LNG_LANG_RU)
-	message.SetString(language.Russian, LNG_LANG_RU, "использовать русский язык (вместо попытки автоопределения языка ОС)")
-	message.SetString(language.AmericanEnglish, LNG_GET_VERSION, LNG_GET_VERSION)
-	message.SetString(language.Russian, LNG_GET_VERSION, "показать версию программы и выйти")
-	message.SetString(language.AmericanEnglish, LNG_GET_HELP, LNG_GET_HELP)
-	message.SetString(language.Russian, LNG_GET_HELP, "показать короткую справку об использовании программы и выйти")
-	message.SetString(language.AmericanEnglish, LNG_VERBOSE_MODE, LNG_VERBOSE_MODE)
-	message.SetString(language.Russian, LNG_VERBOSE_MODE, "включить вывод подробной информации")
-        message.SetString(language.AmericanEnglish, LNG_CERT_MIN_DAYS, LNG_CERT_MIN_DAYS)
-	message.SetString(language.Russian, LNG_CERT_MIN_DAYS, "минимально допустимое время истечения сертификата (в днях)")
-	message.SetString(language.AmericanEnglish, LNG_DELAY_BTW_SND_ATT, LNG_DELAY_BTW_SND_ATT)
-	message.SetString(language.Russian, LNG_DELAY_BTW_SND_ATT, "длительность задержки между попытками отправки сообщений в Telegram (в секундах)")
-	message.SetString(language.AmericanEnglish, LNG_MAX_NUM_SND_ATT, LNG_MAX_NUM_SND_ATT)
-	message.SetString(language.Russian, LNG_MAX_NUM_SND_ATT, "максимальное количество попыток отправки сообщений в Telegram")
-	message.SetString(language.AmericanEnglish, LNG_TGM_TOKEN, LNG_TGM_TOKEN)
-	message.SetString(language.Russian, LNG_TGM_TOKEN, "значение токена Telegram для отправки сообщений")
-	message.SetString(language.AmericanEnglish, LNG_TGM_CHATID, LNG_TGM_CHATID)
-	message.SetString(language.Russian, LNG_TGM_CHATID, "значение chat id Telegram для отправки сообщений")
-	message.SetString(language.AmericanEnglish, LNG_SRV_NAMES, LNG_SRV_NAMES)
-	message.SetString(language.Russian, LNG_SRV_NAMES, "имя (имена) серверов для проверки (через пробел)")
-
-        message.SetString(language.AmericanEnglish, LNG_ERR_MISSING_PAR, LNG_ERR_MISSING_PAR) 
-        message.SetString(language.Russian, LNG_ERR_MISSING_PAR, "ОШИБКА: не задан(ы) один или более обязательных параметров!\n")
-        message.SetString(language.AmericanEnglish, LNG_ERR_MISSING_URL, LNG_ERR_MISSING_URL) 
-        message.SetString(language.Russian, LNG_ERR_MISSING_URL, "ОШИБКА: не задан(ы) один или более URL сервера(-ов) для проверки!\n")
-	message.SetString(language.AmericanEnglish, LNG_ERR_GETCERT_SRV_S, LNG_ERR_GETCERT_SRV_S)
-	message.SetString(language.Russian, LNG_ERR_GETCERT_SRV_S, "ОШИБКА: невозможно получить сертификат для сервера %s: %s\n")
-	message.SetString(language.AmericanEnglish, LNG_ERR_NAME_MISM_S, LNG_ERR_NAME_MISM_S)
-	message.SetString(language.Russian, LNG_ERR_NAME_MISM_S, "ОШИБКА: неверное имя в сертификате сервера - %s: %s\n")
-	message.SetString(language.AmericanEnglish, LNG_ERR_STATUS_N200_D, LNG_ERR_STATUS_N200_D)
-	message.SetString(language.Russian, LNG_ERR_STATUS_N200_D, "ОШИБКА: код статуса в ответе сервера ошибочный (не 200): %d")
-	message.SetString(language.AmericanEnglish, LNG_ERR_SEND_FAIL_S_D, LNG_ERR_SEND_FAIL_S_D)
-	message.SetString(language.Russian, LNG_ERR_SEND_FAIL_S_D, "ОШИБКА: невозможно послать сообщение (%s)! Делаем паузу (%d с)...\n")
-	message.SetString(language.AmericanEnglish, LNG_ERR_SEND_FAIL_R_D, LNG_ERR_SEND_FAIL_R_D)
-	message.SetString(language.Russian, LNG_ERR_SEND_FAIL_R_D, "Не удалось отправить сообщение с %d попыток!\n")
-	message.SetString(language.AmericanEnglish, LNG_ERRORS_FOUND_S, LNG_ERRORS_FOUND_S)
-	message.SetString(language.Russian, LNG_ERRORS_FOUND_S, "НАЙДЕННЫЕ ОШИБКИ:\n%s\n")
-
-	message.SetString(language.AmericanEnglish, LNG_CHECKING_URL, LNG_CHECKING_URL)
-	message.SetString(language.Russian, LNG_CHECKING_URL, "Проверка URL: %s\n")
-	message.SetString(language.AmericanEnglish, LNG_SENDING,  LNG_SENDING)
-	message.SetString(language.Russian, LNG_SENDING, "Отправка...\n")
-	message.SetString(language.AmericanEnglish, LNG_OK, LNG_OK)
-	message.SetString(language.Russian, LNG_OK, "ОК!\n")
-	message.SetString(language.AmericanEnglish, LNG_SERVER_S, LNG_SERVER_S)
-	message.SetString(language.Russian, LNG_SERVER_S,  "Сервер: %s\n")
-	message.SetString(language.AmericanEnglish, LNG_ISSUER_S, LNG_ISSUER_S)
-	message.SetString(language.Russian, LNG_ISSUER_S,  "Выдан: %s\n")
-	message.SetString(language.AmericanEnglish, LNG_EXPIRES_V, LNG_EXPIRES_V)
-	message.SetString(language.Russian, LNG_EXPIRES_V,  "Истекает: %v\n")
-	message.SetString(language.AmericanEnglish, LNG_DAYSLEFT_D, LNG_DAYSLEFT_D)
-	message.SetString(language.Russian, LNG_DAYSLEFT_D, "Осталось: %d дней\n")
+	for _, strs := range lngStrings {
+		message.SetString(language.AmericanEnglish, strs.en, strs.en)
+		message.SetString(language.Russian, strs.en, strs.ru)
+	}
 }
 
 func issuer(info string) string {
