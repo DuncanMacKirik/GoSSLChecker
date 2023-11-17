@@ -4,6 +4,14 @@ A quick-and-dirty Go program that checks for SSL/TLS certificates validity and e
 ## Current status
 4/5 (mostly done/beta version). Buildable and usable, but there is certainly more room for improvement.
 
+## Some history
+It's my first Go program, written with the following goals in mind:
+1) test the language, its runtime and external libraries in real-world scenario, including building cross-platform applications
+2) replace similar, but not-so-reliable Python and PHP solutions
+3) see how hard it is to quickly implement simple internationalization and (at least partial) POSIX compliance in Go
+4) practice using Git and Github some more
+IMHO all these goals have been accomplished, with maybe some minor improvements left to implement when there's enough time.
+
 ## Usage
 <pre>
 <b>SSLChecker</b> options url1 [url2 ...]
@@ -26,6 +34,14 @@ OPTIONS:
 
 ## Состояние проекта
 4/5 (в основном готово/бета-версия). Можно собирать и пользоваться, но ещё есть что улучшать.
+
+## Зачем это вообще?
+Это моя первая программа на Go, и цели перед её разработкой ставились следующие:
+1) испытать в деле сам язык, его инструментарий и библиотеки, причём желательно сразу для нужной в реальной жизни задачи;
+2) заменить предыдущие (и менее надёжные) решения на интерпретируемых языках - PHP и Python;
+3) изучить, насколько трудно в минимальные сроки добавить в подобный проект многоязычность и (хотя бы частичную) совместимость с POSIX;
+4) дополнительно потренироваться в использовании Git и Github.
+С моей точки зрения, все эти цели были успешно достигнуты. Остались мелкие улучшения, которые планируется вносить по возможности.
 
 ## Параметры
 <pre>
