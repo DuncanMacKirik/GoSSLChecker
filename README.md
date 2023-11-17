@@ -1,12 +1,12 @@
 # GoSSLChecker
-A quick-and-dirty Go program that checks for SSL/TLS certificates expiry dates and reports them to the specified Telegram chat.
+A quick-and-dirty Go program that checks for SSL/TLS certificates validity and expiry dates and reports them to the specified Telegram chat.
 
 ## Current status
 4/5 (mostly done/beta version). Buildable and usable, but there is certainly more room for improvement.
 
 ## Usage
-```
-   SSLChecker options url1 [url2 ...]
+<pre>
+<b>SSLChecker</b> options url1 [url2 ...]
 
 OPTIONS:                                                                                                             
    --min-days value, -m value    minimal remaining active days for a certificate (default: 5)
@@ -19,4 +19,30 @@ OPTIONS:
    --verbose, -v                 verbose mode
    --help, -h                    print program usage information and exit
    --version, -V                 print program version and exit
-```
+</pre>
+  
+# GoSSLChecker
+Программа с открытым кодом на Go, проверяющая корректность и сроки истечения, и рапортующая о найденных проблемах в Telegram.
+
+## Состояние проекта
+4/5 (в основном готово/бета-версия). Можно собирать и пользоваться, но ещё есть что улучшать.
+
+## Параметры
+<pre>
+<b>SSLChecker</b> options url1 [url2 ...]
+
+ОПЦИИ:
+   --min-days value, -m value    минимально допустимое время истечения сертификата (в днях) (default: 5)
+   --send-delay value, -d value  длительность задержки между попытками отправки сообщений в Telegram (в секундах) (default: 3)
+   --max-tries value, -x value   максимальное количество попыток отправки сообщений в Telegram (default: 5)
+   --tgm-token value, -t value   значение токена Telegram для отправки сообщений
+   --tgm-chatid value, -c value  значение chat id Telegram для отправки сообщений
+   --lang-en, -e                 использовать английский язык (вместо попытки автоопределения языка ОС)
+   --lang-ru, -r                 использовать русский язык (вместо попытки автоопределения языка ОС)
+   --verbose, -v                 включить вывод подробной информации
+   --help, -h                    показать короткую справку об использовании программы и выйти
+   --version, -V                 показать версию программы и выйти
+
+ВЕРСИЯ:
+   0.5.0
+</pre>
