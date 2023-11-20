@@ -1,6 +1,13 @@
 # GoSSLChecker
 A quick-and-dirty Go program that checks for SSL/TLS certificates validity and expiry dates and reports them to the specified Telegram chat.
 
+## Features
+1) command line/shell utility, usable in scripts
+2) supports multiple languages (English and Russian so far)
+3) supports all SSL/TLS versions
+4) checks for certificate(s) validity and expiry date(s)
+5) checks one or more servers sequentially, and collects all errors (if present) in one neat message.
+
 ## Current status
 4/5 (mostly done/beta version). Buildable and usable, but there is certainly more room for improvement.
 
@@ -31,6 +38,13 @@ OPTIONS:
   
 # GoSSLChecker
 Программа с открытым кодом на Go, проверяющая корректность и сроки истечения, и рапортующая о найденных проблемах в Telegram.
+
+## Возможности
+1) интерфейс командной строки, годится для использования в скриптах;
+2) поддержка многоязычности (пока что - английский и русский языки);
+3) поддержка всех версий SSL/TLS;
+4) проверка актуальности каждого сертификата (и его цепочки доверия) и даты истечения;
+5) последовательная проверка одного или нескольких серверов, если есть ошибки - они аккумулируются и затем высылаются одним сообщением.
 
 ## Состояние проекта
 4/5 (в основном готово/бета-версия). Можно собирать и пользоваться, но ещё есть что улучшать.
