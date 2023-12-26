@@ -273,12 +273,19 @@ func main() {
 	initLangs()
 	userLanguage, _ := jibber_jabber.DetectLanguage()
 
+        // dirty hack to switch language before cli analyser starts up
 	for _, value := range os.Args {
 	        value = strings.ToLower(strings.TrimSpace(value))
-	        if (value == "--lang-en") || (value == "-e") {
+	        if (value == "--lang-en") || (value == "-e") ||
+			((len(value) >= 2) && 
+				strings.HasPrefix(value, "-") && !strings.HasPrefix(value, "--") && 
+				strings.Contains(value, "e")) {
 	        	userLanguage = "en"
 	        }
-	        if (value == "--lang-ru") || (value == "-r") {
+	        if (value == "--lang-ru") || (value == "-r") ||
+			((len(value) >= 2) &&
+				strings.HasPrefix(value, "-") && !strings.HasPrefix(value, "--") && 
+				strings.Contains(value, "r")) {
 	        	userLanguage = "ru"
 	        }
 	}
@@ -420,4 +427,3 @@ VERSION:
 		fail(err.Error())
 	}
 }
-
